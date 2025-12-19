@@ -6,16 +6,23 @@ reflect support for multiple content sources.
 """
 
 from typing import Optional
-
+import os
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
+from youtube_transcript_api.proxies import GenericProxyConfig
 import requests
+import urllib
 from bs4 import BeautifulSoup
 
 
 class ContentFetcher:
     def fetch_youtube(self, video_id: str) -> str:
         try:
-            ytt_api = YouTubeTranscriptApi()
+            ytt_api = YouTubeTranscriptApi(
+                proxy_config=GenericProxyConfig(
+                    http_url=os.getenv("HTTP_PROXY"),
+                    https_url=os.getenv("HTTPS_PROXY"),
+                )
+            )
             fetched = ytt_api.fetch(video_id, languages=["de", "en"])
             texts = []
             for snippet in fetched:
@@ -31,7 +38,7 @@ class ContentFetcher:
 
     def fetch_webpage(self, url: str, timeout: int = 10) -> str:
         try:
-            resp = requests.get(url, timeout=timeout)
+            resp = requests.get(url, timeout=timeout, proxies=urllib.request.getproxies())
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, "html.parser")
             for s in soup(["script", "style"]):
