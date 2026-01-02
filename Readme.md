@@ -78,6 +78,8 @@ youtube_subs/
 │   ├── main.py                # CLI entrypoint
 │   ├── app/
 │   │   └── controller.py      # core business logic
+│   └── renderers/
+│       └── rich_renderer.py   # print text in CLI nicer
 │   └── services/
 │       ├── ollama_client.py   # small wrapper around Ollama
 │       └── content_fetcher.py # fetch YouTube transcripts & webpage text
@@ -90,20 +92,20 @@ youtube_subs/
 
 **Architecture diagram (boxed)**
 ```
-┌─────────────────┐     ┌──────────────────────────────┐
-│      User       │ <-> │ src/main.py (CLI: tab-shell) │
-└─────────────────┘     └──────────────────────────────┘
-							    		│
-			    						▼
-						 ┌────────────────────────────┐
-						 │  ContentController (core)  │
-						 │  (business logic / state)  │
-						 └────────────────────────────┘
-				        	 ↙                    ↘
-	    	┌─────────────────────┐         ┌──────────────────────┐
-	    	│   ContentFetcher    │         │     OllamaClient     │
-	    	│   (YouTube / Web)   │         │   (list/chat API)    │
-	    	└─────────────────────┘         └──────────────────────┘
+┌─────────────────┐     ┌─────────────────────────────────────┐
+│      User       │ <-> │ CLI: tab-shell (uses Rich-renderer) │
+└─────────────────┘     └─────────────────────────────────────┘
+		    					    		│
+		    	    						▼
+		    				 ┌────────────────────────────┐
+		    				 │  ContentController (core)  │
+		    				 │  (business logic / state)  │
+		    				 └────────────────────────────┘
+		    		        	 ↙                    ↘
+	        	┌─────────────────────┐         ┌──────────────────────┐
+	        	│   ContentFetcher    │         │     OllamaClient     │
+	        	│   (YouTube / Web)   │         │   (list/chat API)    │
+	        	└─────────────────────┘         └──────────────────────┘
 ```
 
 **Development**
