@@ -14,15 +14,33 @@ import urllib
 from bs4 import BeautifulSoup
 
 
+def get_yt_api() -> YouTubeTranscriptApi:
+    if os.getenv("HTTP_PROXY") and os.getenv("HTTPS_PROXY"):
+        return YouTubeTranscriptApi(
+            proxy_config=GenericProxyConfig(
+                http_url=os.getenv("HTTP_PROXY"),
+                https_url=os.getenv("HTTPS_PROXY"),
+            )
+        )
+    elif os.getenv("HTTP_PROXY") and not os.getenv("HTTPS_PROXY"):
+        return YouTubeTranscriptApi(
+            proxy_config=GenericProxyConfig(
+                http_url=os.getenv("HTTP_PROXY"),
+            )
+        )
+    elif not os.getenv("HTTP_PROXY") and os.getenv("HTTPS_PROXY"):
+        return YouTubeTranscriptApi(
+            proxy_config=GenericProxyConfig(
+                https_url=os.getenv("HTTPS_PROXY"),
+            )
+        )
+    return YouTubeTranscriptApi()
+
+
 class ContentFetcher:
     def fetch_youtube(self, video_id: str) -> str:
         try:
-            ytt_api = YouTubeTranscriptApi(
-                proxy_config=GenericProxyConfig(
-                    http_url=os.getenv("HTTP_PROXY"),
-                    https_url=os.getenv("HTTPS_PROXY"),
-                )
-            )
+            ytt_api = get_yt_api()
             fetched = ytt_api.fetch(video_id, languages=["de", "en"])
             texts = []
             for snippet in fetched:
