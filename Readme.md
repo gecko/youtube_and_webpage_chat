@@ -2,16 +2,23 @@
 
 A small CLI tool to load YouTube subtitles or webpage text and chat about the content using a local Ollama model.
 
+
+![](images/Screenshot.png)
+*Screenshot of the CLI in action*
+
+
 **Features**
 - Load YouTube transcripts (when available) or scrape webpage text
 - Ask questions, get summaries, and interact with the loaded content via a local Ollama model
 - Select from available Ollama models and adjust context size
 - Nice CLI: tab-completion for commands and persistent command/history accessible with the arrow keys
 
+
 **Requirements**
 - Python 3.11 – 3.14
 - Ollama running locally and reachable from this machine
 - Network access for fetching YouTube transcripts and webpages
+
 
 **Install**
 1. Install Poetry (optional but recommended):
