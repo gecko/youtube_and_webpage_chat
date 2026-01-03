@@ -135,11 +135,6 @@ class ChatCLI(cmd.Cmd):
             if line.startswith("/"):
                 # handled by precmd/onecmd
                 return
-
-            if not self.controller.transcript:
-                self.renderer.render_warning("No content loaded. Use /load <url> to load a resource.")
-                return
-
             self.renderer.render_loading_message()
             reply = self.controller.ask(line)
             self.renderer.render_response("assistant", reply)
