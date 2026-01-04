@@ -82,8 +82,11 @@ class ChatCLI(cmd.Cmd):
     def do_model(self, arg):
         try:
             models = self.controller.list_models()
-            self.renderer.render_models_table(models, self.controller.current_model)
-            sel = input("Select model index or name: ")
+            if arg:
+                sel = arg
+            else:
+                self.renderer.render_models_table(models, self.controller.current_model)
+                sel = input("Select model index or name: ")
             try:
                 idx = int(sel)
                 self.controller.set_model(models[idx])

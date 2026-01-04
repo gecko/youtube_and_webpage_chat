@@ -105,7 +105,7 @@ class RichRenderer:
         """Render the help/commands information."""
         commands = [
             ("/load <url>", "Load a YouTube video or webpage URL"),
-            ("/model", "List and choose an Ollama model"),
+            ("/model <index>", "List and choose an Ollama model"),
             ("/subs", "Print the full loaded content (subtitles or webpage text)"),
             ("/summary", "Ask the model for a concise summary"),
             ("/hist", "Show the chat history"),
