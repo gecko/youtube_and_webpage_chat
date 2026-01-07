@@ -63,16 +63,36 @@ class ContentController:
         return self.transcript
 
     def _initialize_chat_messages(self) -> None:
+        dont_consider_advertisements_prompt = (
+            "Also, when analyzing the content, ignore any advertisements, "
+            "promotional material, or unrelated links that may be present. "
+            "Focus solely on the main content relevant to the topic at hand. "
+        )
         if self.source_type == "webpage":
-            system_msg = "You are an intelligent assistant analyzing the contents of a webpage. Use only the provided webpage text as your context. Provide clear, concise, and accurate answers focused on the content. When appropriate, organize information into bullet lists for clarity. Avoid speculation beyond the text and maintain a helpful tone."
+            system_msg = (
+                "You are an intelligent assistant analyzing the contents of a webpage. "
+                + "Use only the provided webpage text as your context. "
+                + "Provide clear, concise, and accurate answers focused on the content. "
+                + "When appropriate, organize information into bullet lists for clarity. "
+                + "Avoid speculation beyond the text and maintain a helpful tone. "
+                + dont_consider_advertisements_prompt
+            )
             user_msg = f"Here is the webpage content (from {self.loaded_url}):\n{self.transcript}"
             assistant_msg = "I have received the webpage content. You can now ask me questions about the page."
         elif self.source_type == "youtube":
-            system_msg = "You are an assistant discussing a YouTube video using only the provided subtitles as your context. Focus your responses on the video's content based on these subtitles. Keep your answers clear, concise, and informative. Use bullet lists when it helps to organize key points or steps. Avoid making assumptions beyond the subtitles."
+            system_msg = (
+                "You are an assistant discussing a YouTube video using only the provided subtitles as your context. "
+                "Focus your responses on the video's content based on these subtitles. Keep your answers clear, concise, and informative. "
+                "Use bullet lists when it helps to organize key points or steps. Avoid making assumptions beyond the subtitles."
+                + dont_consider_advertisements_prompt
+            )
             user_msg = f"Here are the subtitles:\n{self.transcript}"
             assistant_msg = "I have received the subtitles. You can now ask me questions about the video."
         else:
-            system_msg = "You are an assistant. If given, use the provided content as context and keep your answers clear, concise, and informative. Use bullet lists when it helps to organize key points or steps."
+            system_msg = (
+                "You are an assistant. If given, use the provided content as context and keep your answers clear, concise, and informative. "
+                + "Use bullet lists when it helps to organize key points or steps."
+            )
             user_msg = f"Here is the content:\n{self.transcript}"
             assistant_msg = "I have received the content. You can now ask me questions."
 
