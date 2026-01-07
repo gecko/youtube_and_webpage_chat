@@ -106,6 +106,7 @@ class RichRenderer:
         commands = [
             ("/load <url>", "Load a YouTube video or webpage URL"),
             ("/model <index>", "List and choose an Ollama model"),
+            ("/ctx <size>", "Set the context size (default: 32000)"),
             ("/subs", "Print the full loaded content (subtitles or webpage text)"),
             ("/summary", "Ask the model for a concise summary"),
             ("/hist", "Show the chat history"),

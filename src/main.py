@@ -108,6 +108,17 @@ class ChatCLI(cmd.Cmd):
             self.renderer.render_plain(self.controller.transcript)
         else:
             self.renderer.render_warning("No content loaded")
+    
+    def do_ctx(self, arg):
+        try:
+            size = int(arg) if arg else None
+            if size:
+                self.controller.context_size = size
+                self.renderer.render_success(f"Set context size to {self.controller.context_size} characters")
+            else:
+                self.renderer.render_plain(f"Current context size: {self.controller.context_size} characters")
+        except Exception as exc:
+            self.renderer.render_error(f"Error setting context size: {exc}")
 
     def do_hist(self, arg):
         self.renderer.render_history(self.controller.messages)
