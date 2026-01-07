@@ -10,6 +10,7 @@ import os
 import readline
 import atexit
 import cmd
+from time import time
 
 # make the `src` directory importable so `services` and `app` modules resolve
 sys.path.insert(0, os.path.dirname(__file__))
@@ -98,17 +99,21 @@ class ChatCLI(cmd.Cmd):
 
     def do_summary(self, arg):
         try:
+            t_start = time()
             summary = self.controller.summarize()
+            t_end = time()
             self.renderer.render_summary(summary)
+            self.renderer.render_caption(f"{t_end - t_start:.2f} seconds")
         except Exception as exc:
             self.renderer.render_error(f"Error generating summary: {exc}")
 
     def do_subs(self, arg):
         if self.controller.transcript:
             self.renderer.render_plain(self.controller.transcript)
+            self.renderer.render_caption(f"Length: {len(self.controller.transcript.split())} words")
         else:
             self.renderer.render_warning("No content loaded")
-    
+
     def do_ctx(self, arg):
         try:
             size = int(arg) if arg else None
@@ -119,6 +124,9 @@ class ChatCLI(cmd.Cmd):
                 self.renderer.render_plain(f"Current context size: {self.controller.context_size} characters")
         except Exception as exc:
             self.renderer.render_error(f"Error setting context size: {exc}")
+
+    def do_timing(self, arg):
+        pass  # Timing command implementation can be added here
 
     def do_hist(self, arg):
         self.renderer.render_history(self.controller.messages)
@@ -150,8 +158,11 @@ class ChatCLI(cmd.Cmd):
                 # handled by precmd/onecmd
                 return
             self.renderer.render_loading_message()
+            t_start = time()
             reply = self.controller.ask(line)
+            t_end = time()
             self.renderer.render_response("assistant", reply)
+            self.renderer.render_caption(f"{t_end - t_start:.2f} seconds")
         except Exception as exc:
             self.renderer.render_error(f"Error while asking model: {exc}")
 

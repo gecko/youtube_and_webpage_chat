@@ -9,6 +9,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from rich.align import Align
 
 
 class RichRenderer:
@@ -147,3 +148,11 @@ class RichRenderer:
             text: The text to render
         """
         self.console.print(text)
+
+    def render_caption(self, caption: str) -> None:
+        """Render a caption message with dim styling.
+
+        Args:
+            caption: The caption text
+        """
+        self.console.print(Align.right(f"[dim]{caption}[/dim]"))
