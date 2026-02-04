@@ -105,24 +105,16 @@ class ContentController:
     def summarize(self) -> str:
         if not self.transcript:
             raise RuntimeError("No content loaded to summarize")
-        if self.source_type == "webpage":
-            system_msg = "You are a helpful assistant that summarizes webpage content."
-            body_label_start = "<WEBPAGE_START>\n"
-            body_label_end = "<WEBPAGE_END>\n"
-        else:
-            system_msg = "You are a helpful assistant that summarizes YouTube video subtitles."
-            body_label_start = "<SUBTITLES_START>\n"
-            body_label_end = "<SUBTITLES_END>\n"
 
         summary_prompt = "Please provide a brief summary of the following content:\n"
-        summary_prompt += body_label_start
+        summary_prompt += "<CONTENT>\n"
         summary_prompt += f"{self.transcript}\n"
-        summary_prompt += body_label_end
+        summary_prompt += "</CONTENT>\n"
         summary_prompt += "Please keep the summary concise and to the point."
-
+        self.messages.append({"role": "user", "content": summary_prompt})
         response = self.ollama.chat(
             model=self.current_model,
-            messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": summary_prompt}],
+            messages=self.messages,
             options={"num_ctx": self.context_size},
         )
         return response["message"]["content"]
