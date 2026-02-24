@@ -201,6 +201,19 @@ def main():
     renderer = RichRenderer()
 
     renderer.render_help()
+    
+    # Display selected provider and model at startup
+    provider_name = os.getenv("SELECTED_LLM_PROVIDER", "ollama").lower()
+    if provider_name == "ollama":
+        provider_display = "Ollama"
+    elif provider_name == "openrouter":
+        provider_display = "OpenRouter"
+    else:
+        provider_display = provider_name
+    
+    model_display = controller.current_model or "Not selected"
+    renderer.render_plain(f"\n[bold green]→ Provider:[/bold green] {provider_display}  |  [bold green]Model:[/bold green] {model_display}\n")
+    
     cli = ChatCLI(controller, renderer)
     cli.cmdloop()
 

@@ -163,14 +163,25 @@ class ContentController:
         """Swap the LLM client while preserving conversation history.
 
         This allows switching between providers (e.g., Ollama to OpenRouter)
-        without losing the conversation context.
+        without losing the conversation context. Automatically selects the first
+        available model from the new provider and saves it to .env.
 
         Args:
             new_client: The new LLM client instance
         """
         self.llm_client = new_client
         self.available_models = []  # Reset cached models
-        self.current_model = ""  # Will be set on next ensure_models() or set_model()
+        
+        # Automatically fetch models from new provider and select the first one
+        try:
+            self.available_models = self.llm_client.list_models()
+            if self.available_models:
+                self.current_model = self.available_models[0]
+                # Persist the selected model to .env
+                self._save_env_var("SELECTED_MODEL", self.current_model)
+        except Exception:
+            # If unable to fetch models, reset current_model
+            self.current_model = ""
 
     @staticmethod
     def _save_env_var(key: str, value: str) -> None:
