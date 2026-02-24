@@ -106,7 +106,8 @@ class RichRenderer:
         """Render the help/commands information."""
         commands = [
             ("/load <url>", "Load a YouTube video or webpage URL"),
-            ("/model <index>", "List and choose an Ollama model"),
+            ("/provider", "Switch LLM provider (Ollama or OpenRouter)"),
+            ("/model <index>", "List and choose a model"),
             ("/ctx <size>", "Set the context size (default: 32000)"),
             ("/subs", "Print the full loaded content (subtitles or webpage text)"),
             ("/summary", "Ask the model for a concise summary"),

@@ -12,10 +12,12 @@ import atexit
 import cmd
 from time import time
 
+from dotenv import load_dotenv
+
 # make the `src` directory importable so `services` and `app` modules resolve
 sys.path.insert(0, os.path.dirname(__file__))
 
-from services.ollama_client import OllamaClient
+from services.llm_factory import create_llm_client
 from services.content_fetcher import ContentFetcher
 from app.controller import ContentController
 from renderers.rich_renderer import RichRenderer
@@ -79,6 +81,28 @@ class ChatCLI(cmd.Cmd):
             self.renderer.render_success("Loaded content.")
         except Exception as exc:
             self.renderer.render_error(f"Error loading URL: {exc}")
+
+    def do_provider(self, arg):
+        """Switch between LLM providers (Ollama or OpenRouter)."""
+        try:
+            from services.llm_factory import create_llm_client
+            import os
+
+            new_client = create_llm_client(self.renderer, force_interactive=True)
+            self.controller.swap_llm_client(new_client)
+
+            # Get provider name for feedback
+            provider_name = os.getenv("SELECTED_LLM_PROVIDER", "unknown").lower()
+            if provider_name == "ollama":
+                provider_display = "Ollama"
+            elif provider_name == "openrouter":
+                provider_display = "OpenRouter"
+            else:
+                provider_display = provider_name
+
+            self.renderer.render_success(f"Switched to {provider_display}. Conversation history preserved.")
+        except Exception as exc:
+            self.renderer.render_error(f"Error switching provider: {exc}")
 
     def do_model(self, arg):
         try:
@@ -169,17 +193,12 @@ class ChatCLI(cmd.Cmd):
 
 def main():
     _setup_history()
+    load_dotenv()
 
-    ollama_client = OllamaClient()
+    llm_client = create_llm_client(renderer=None)
     fetcher = ContentFetcher()
-    controller = ContentController(ollama_client, fetcher)
+    controller = ContentController(llm_client, fetcher)
     renderer = RichRenderer()
-
-    try:
-        models = controller.list_models()
-        renderer.render_success(f"Loaded {len(models)} available models. Default: {controller.current_model}")
-    except Exception as exc:
-        renderer.render_warning(f"Could not list Ollama models: {exc}")
 
     renderer.render_help()
     cli = ChatCLI(controller, renderer)

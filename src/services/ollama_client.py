@@ -1,14 +1,17 @@
 """Lightweight wrapper around the `ollama` module to enable DI and easier testing.
 
 This module intentionally avoids any network or side-effect in constructors.
+Implements the LLMClient protocol for compatibility with other LLM backends.
 """
 
 from typing import Any, Dict, List
 
 import ollama
 
+from . import LLMClient
 
-class OllamaClient:
+
+class OllamaClient(LLMClient):
     def __init__(self, client_module: Any = ollama):
         self._client = client_module
 

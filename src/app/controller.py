@@ -1,10 +1,13 @@
 """Core application controller that holds conversation state and business logic.
 
 This module does not perform direct I/O (no print/input) and depends on injected
-service objects for Ollama and transcript fetching.
+service objects for LLM client and transcript fetching.
 """
 
+import os
 from typing import List, Dict, Optional
+
+from dotenv import load_dotenv
 
 
 def _parse_youtube_video_id(url: str) -> Optional[str]:
@@ -20,12 +23,19 @@ def _parse_youtube_video_id(url: str) -> Optional[str]:
 
 
 class ContentController:
-    def __init__(self, ollama_client, fetcher, default_model: Optional[str] = None, context_size: int = 32000):
-        self.ollama = ollama_client
+    def __init__(self, llm_client, fetcher, default_model: Optional[str] = None, context_size: int = 32000):
+        load_dotenv()
+        self.llm_client = llm_client
         self.fetcher = fetcher
         self.context_size = context_size
         self.available_models: List[str] = []
-        self.current_model: Optional[str] = default_model
+
+        # Load or set current model
+        if default_model:
+            self.current_model = default_model
+        else:
+            self.current_model = os.getenv("SELECTED_MODEL", "")
+
         self.transcript: str = ""
         self.messages: List[Dict[str, str]] = []
         self.source_type: Optional[str] = None
@@ -33,7 +43,7 @@ class ContentController:
 
     def ensure_models(self) -> None:
         if not self.available_models:
-            self.available_models = self.ollama.list_models()
+            self.available_models = self.llm_client.list_models()
             if not self.current_model and self.available_models:
                 self.current_model = self.available_models[0]
 
@@ -46,6 +56,9 @@ class ContentController:
         if model not in self.available_models:
             raise ValueError("Model not available")
         self.current_model = model
+        # Persist to .env
+        os.makedirs(os.path.dirname(os.path.abspath(".env")) or ".", exist_ok=True)
+        self._save_env_var("SELECTED_MODEL", model)
 
     def load(self, url: str) -> str:
         self.loaded_url = url
@@ -106,13 +119,16 @@ class ContentController:
         if not self.transcript:
             raise RuntimeError("No content loaded to summarize")
 
+        # Ensure a model is selected before making API calls
+        self.ensure_models()
+
         summary_prompt = "Please provide a brief summary of the following content:\n"
         summary_prompt += "<CONTENT>\n"
         summary_prompt += f"{self.transcript}\n"
         summary_prompt += "</CONTENT>\n"
         summary_prompt += "Please keep the summary concise and to the point."
         self.messages.append({"role": "user", "content": summary_prompt})
-        response = self.ollama.chat(
+        response = self.llm_client.chat(
             model=self.current_model,
             messages=self.messages,
             options={"num_ctx": self.context_size},
@@ -122,8 +138,12 @@ class ContentController:
     def ask(self, user_input: str) -> str:
         if not user_input.strip():
             raise ValueError("Empty user input")
+
+        # Ensure a model is selected before making API calls
+        self.ensure_models()
+
         self.messages.append({"role": "user", "content": user_input})
-        response = self.ollama.chat(
+        response = self.llm_client.chat(
             model=self.current_model, messages=self.messages, options={"num_ctx": self.context_size}
         )
         assistant_message = response["message"]
@@ -137,4 +157,45 @@ class ContentController:
             self.messages = []
 
     def reset(self) -> None:
-        self.__init__(self.ollama, self.fetcher)
+        self.__init__(self.llm_client, self.fetcher)
+
+    def swap_llm_client(self, new_client) -> None:
+        """Swap the LLM client while preserving conversation history.
+
+        This allows switching between providers (e.g., Ollama to OpenRouter)
+        without losing the conversation context.
+
+        Args:
+            new_client: The new LLM client instance
+        """
+        self.llm_client = new_client
+        self.available_models = []  # Reset cached models
+        self.current_model = ""  # Will be set on next ensure_models() or set_model()
+
+    @staticmethod
+    def _save_env_var(key: str, value: str) -> None:
+        """Save an environment variable to .env file."""
+        env_file = ".env"
+
+        # Read existing content
+        existing_content = ""
+        if os.path.exists(env_file):
+            with open(env_file, "r") as f:
+                existing_content = f.read()
+
+        # Update or append the key
+        lines = existing_content.strip().split("\n") if existing_content.strip() else []
+        updated = False
+
+        for i, line in enumerate(lines):
+            if line.startswith(f"{key}="):
+                lines[i] = f"{key}={value}"
+                updated = True
+                break
+
+        if not updated:
+            lines.append(f"{key}={value}")
+
+        # Write back to file
+        with open(env_file, "w") as f:
+            f.write("\n".join(lines) + "\n")
